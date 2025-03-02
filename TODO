@@ -1,1 +1,10 @@
 Copy external files, like css files to the dist folder
+Make layout system
+  - Layout system is the key part of the new migration
+    to static _website_ generator
+Make hot reloading
+  - Make a watch process that can hot reload the changes
+Make a better logging system
+  - better prints the notify things from staticy
+Hanldle Errors
+  - Show the proper error message to user

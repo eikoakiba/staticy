@@ -11,21 +11,21 @@ pub fn read_base(which: &str) -> String {
     return base_content_sample;
 }
 
-pub fn save_contents(ret_str: String, file_name: &String) -> content::Content {
+pub fn save_contents(
+    ret_str: &str,
+    file_name: &str,
+    title: &str,
+    info: &str,
+    date: &str,
+) -> content::Content {
     // Save the HTML contents files
     let mut base_content: String = file::read_base("blog.html"); // read the base file
     let base_content_lines: Vec<&str> = ret_str.split("\n").collect();
-    let title: String = base_content_lines[0].to_string();
-    let date: String = match base_content_lines[1] {
-        "-" => Utc::now().to_string(),
-        value => value.to_string(),
-    };
-    let info: String = base_content_lines[2].to_string();
     let content: content::Content = content::Content::new(
-        file_name.clone(), // instead of to_string
-        title.clone(),
-        info.clone(),
-        date.clone(),
+        file_name.to_string(), // instead of to_string
+        title.to_string(),
+        info.to_string(),
+        date.to_string(),
     );
 
     base_content = base_content
@@ -34,9 +34,13 @@ pub fn save_contents(ret_str: String, file_name: &String) -> content::Content {
         .replace("<ContentInfo/>", &info)
         .replace(
             "<Content/>",
-            &base_content_lines[3..base_content_lines.len()].join("<br/>"),
+            &base_content_lines[2..base_content_lines.len()].join(""),
         ); // Put Actual Value
-    let mut file = fs::File::create(format!("./dist/{file_name}.html")).unwrap(); // Create html
-    let _ = file.write_all(base_content.as_bytes()); // Write content inside the html file
+    let mut file = fs::File::create(format!("dist/{file_name}.html"));
+    if let Err(msg) = file {
+        println!("{}", msg.to_string())
+    } else if let Ok(mut file_u) = file {
+        let _ = file_u.write_all(base_content.as_bytes()); // Write content inside the html file
+    }
     content
 }

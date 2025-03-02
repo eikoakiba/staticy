@@ -1,7 +1,8 @@
+use staticy::content::Content;
+
 fn main() {
     // Set the Base files as base blog file
-    //let result: Vec<staticy::Content> = staticy::generate_contents().unwrap();
-    let result: Vec<staticy::content::Content> = staticy::generate_contents().unwrap();
+    let result: Vec<Content> = staticy::generate_html().unwrap();
 
     let base = staticy::generate_blog(result);
 
