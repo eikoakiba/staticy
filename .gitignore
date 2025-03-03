@@ -1,5 +1,3 @@
 /target
-dev
+build.sh
 dist
-base
-content

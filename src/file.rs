@@ -1,8 +1,21 @@
 use chrono::Utc;
+use std::path::Path;
 use std::{fs, io::Write};
 
 use crate::content;
 use crate::file;
+
+pub fn dist_check(create: bool) -> Result<bool, String> {
+    if !Path::new("dist").exists() {
+        if create {
+            if let Err(err) = std::fs::create_dir("dist") {
+                return Err(format!("Can't make the output file because: {}", err));
+            }
+        }
+        return Ok(false);
+    }
+    return Ok(true);
+}
 
 pub fn read_base(which: &str) -> String {
     // panic if can't find the file with expect
@@ -17,7 +30,7 @@ pub fn save_contents(
     title: &str,
     info: &str,
     date: &str,
-) -> content::Content {
+) -> Result<content::Content, String> {
     // Save the HTML contents files
     let mut base_content: String = file::read_base("blog.html"); // read the base file
     let base_content_lines: Vec<&str> = ret_str.split("\n").collect();
@@ -36,11 +49,19 @@ pub fn save_contents(
             "<Content/>",
             &base_content_lines[2..base_content_lines.len()].join(""),
         ); // Put Actual Value
-    let mut file = fs::File::create(format!("dist/{file_name}.html"));
-    if let Err(msg) = file {
-        println!("{}", msg.to_string())
-    } else if let Ok(mut file_u) = file {
-        let _ = file_u.write_all(base_content.as_bytes()); // Write content inside the html file
+    if let Err(err) = dist_check(true) {
+        return Err(err);
     }
-    content
+    let file = fs::File::create(format!("dist/{file_name}.html"));
+    if let Err(msg) = file {
+        return Err(format!("Can't create output file because: {}", msg));
+    } else if let Ok(mut file_u) = file {
+        if let Err(err) = file_u.write_all(base_content.as_bytes()) {
+            return Err(format!(
+                "Can't write data to the output content because: {}",
+                err
+            ));
+        }
+    }
+    return Ok(content);
 }

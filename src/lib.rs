@@ -1,4 +1,4 @@
-use chrono::prelude::Utc;
+use chrono::{prelude::Utc, Weekday};
 use content::Content;
 use file::save_contents;
 use markdown::Options;
@@ -113,91 +113,59 @@ static COUNTRIES: phf::Map<&'static str, Handler> = phf_map! {
 //    Some(ret_content)
 //}
 
-pub fn generate_blog(files: Vec<content::Content>) -> Option<String> {
+pub fn generate_blog(files: &Vec<content::Content>) -> Result<(), String> {
     let mut base_blog_cont: String = file::read_base("index.html");
-    if let Some(value) = base_blog_cont.find("<ContentList>") {
-        let base_blog_tag: usize = base_blog_cont
-            .find("</ContentList")
-            .expect("ERROR: Please close the ContentList Element");
-        let mut chr: usize = value + "<ContentList>".len();
-        let mut token: char = char::default();
-        let mut element_inner: String = String::default();
-        loop {
-            chr += 1;
-            token = base_blog_cont.chars().nth(chr).unwrap();
 
-            if chr >= base_blog_tag {
-                break;
-            }
+    let result = base_blog_cont.find("<ContentList>");
+    if let None = result {
+        return Err(format!("Please provide the ContentList element"));
+    }
 
-            element_inner += &token.to_string();
+    let value = result.unwrap();
+    let base_blog_tag: usize = base_blog_cont
+        .find("</ContentList")
+        .expect("ERROR: Please close the ContentList Element");
+    let mut chr: usize = value + "<ContentList>".len();
+    let mut token: char = char::default();
+    let mut element_inner: String = String::default();
+    loop {
+        chr += 1;
+        token = base_blog_cont.chars().nth(chr).unwrap(); // TODO: unwrap
+
+        if chr >= base_blog_tag {
+            break;
         }
 
-        let form_repl: String = format!("<ContentList>\n{}</ContentList>", element_inner);
-        let mut final_cont: String = String::default();
-        files.iter().for_each(|x| {
-            final_cont += &element_inner
-                .replace("<BlogName/>", &x.title)
-                .replace("<BlogLink/>", &x.get_link())
-                .replace("<BlogDate/>", &x.date)
-                .replace("<BlogInfo/>", &x.info);
-        });
-        //println!("{}", final_cont);
-        base_blog_cont = base_blog_cont.replace(&form_repl, &final_cont);
-
-        let mut file = fs::File::create("./dist/index.html").unwrap(); // Create html
-        let _ = file.write_all(base_blog_cont.as_bytes()); // Write content inside the html file
-    } else {
-        return None;
+        element_inner += &token.to_string();
     }
-    Some(String::from("GOOD"))
-}
 
-////pub fn generate_base_blog(files: Vec<String>) -> Result<(), String> {
-//pub fn generate_contents() -> Result<Vec<content::Content>, String> {
-//    let mut files: Vec<content::Content> = Vec::default(); // == Vec::new();
-//    for file in WalkDir::new("./content")
-//        .into_iter()
-//        .filter_map(|file| file.ok())
-//    {
-//        let file_name_main: &str = file.file_name().to_str().unwrap();
-//        // Check if we have the same dir name or something other than files
-//        let file_name: String = file.path().display().to_string();
-//        if file_name == "./content".to_string()
-//            || !file.metadata().unwrap().is_file()
-//            || !file_name.contains(".con")
-//        // beta
-//        {
-//            println!(
-//                "WARNING: This file {} can't process because it's not a .con file",
-//                file_name_main
-//            );
-//            continue;
-//        }
-//
-//        let file_content: String = match fs::read_to_string(&file_name) {
-//            Ok(value) => value.trim().to_string(),
-//            Err(error) => panic!("{}", error),
-//        };
-//
-//        match magic(
-//            file_content,
-//            &file_name_main[0..file_name_main.len() - 4].to_string(),
-//        ) {
-//            Some(value) => {
-//                files.push(value);
-//            }
-//            None => {
-//                println!("WARNING: This file didn't provide any magic symbols")
-//            }
-//        };
-//
-//        //files.push(res);
-//
-//        //println!("{}", file.path().display());
-//    }
-//    Ok(files)
-//}
+    let form_repl: String = format!("<ContentList>\n{}</ContentList>", element_inner);
+    let mut final_cont: String = String::default();
+    files.iter().for_each(|x| {
+        final_cont += &element_inner
+            .replace("<BlogName/>", &x.title)
+            .replace("<BlogLink/>", &x.get_link())
+            .replace("<BlogDate/>", &x.date)
+            .replace("<BlogInfo/>", &x.info);
+    });
+    //println!("{}", final_cont);
+    base_blog_cont = base_blog_cont.replace(&form_repl, &final_cont);
+
+    if let Err(msg) = file::dist_check(true) {
+        return Err(msg);
+    }
+
+    let file = fs::File::create("./dist/index.html"); // Create html
+    match file {
+        Ok(mut file) => {
+            if let Err(err) = file.write_all(base_blog_cont.as_bytes()) {
+                return Err(format!("Can't write data to blog because: {}", err));
+            }
+            Ok(())
+        }
+        Err(err) => Err(format!("Can't create the index.html file because: {}", err)),
+    }
+}
 
 pub fn generate_html() -> Result<Vec<content::Content>, String> {
     let mut files: Vec<Content> = Vec::default(); // == Vec::new();
@@ -205,14 +173,27 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
         .into_iter()
         .filter_map(|file| file.ok())
     {
-        let file_name_main: &str = file.file_name().to_str().unwrap();
+        let file_name_main = file.file_name().to_str();
+        if let None = file_name_main {
+            return Err(format!("Can't process the content's filename"));
+        }
+        let file_name_main = file_name_main.unwrap();
+
+        let is_file = file.metadata();
+        if let Err(msg) = is_file {
+            return Err(format!("Can't process the file metadata"));
+        }
+        let is_file = is_file.unwrap();
 
         // Check if we have the same dir name or something other than files
+
         let file_name: String = file.path().display().to_string();
-        if file_name == "./content"
-            || !file.metadata().unwrap().is_file()
-            || !file_name.contains(".md")
-        {
+
+        if file_name == "./content" {
+            continue;
+        }
+
+        if !is_file.is_file() || !file_name.contains(".md") {
             println!(
                 "INFO: This file {} can't process because it's not .md file",
                 file_name_main
@@ -222,7 +203,7 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
 
         let file_content: String = match fs::read_to_string(&file_name) {
             Ok(value) => value.trim().to_string(),
-            Err(error) => panic!("{}", error),
+            Err(error) => return Err(error.to_string()),
         };
 
         //match magic(
@@ -245,10 +226,13 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
             let info = res_chr[1];
             let date: String = Utc::now().to_string();
 
-            let content: Content =
+            let content: Result<Content, String> =
                 save_contents(&html_content, &file_name_main, &title, &info, &date);
 
-            files.push(content);
+            match content {
+                Ok(content) => files.push(content),
+                Err(err) => return Err(err),
+            }
         }
     }
     Ok(files)

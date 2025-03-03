@@ -1,10 +1,18 @@
+use log::{error, warn};
 use staticy::content::Content;
 
 fn main() {
     // Set the Base files as base blog file
-    let result: Vec<Content> = staticy::generate_html().unwrap();
-
-    let base = staticy::generate_blog(result);
+    let result = staticy::generate_html();
+    if let Err(ref err) = result {
+        error!("ERROR: {}", err);
+    }
+    let result = result.unwrap();
+    let base = staticy::generate_blog(&result);
+    match base {
+        Ok(()) => println!("Awesome! All files generated inside dist/ folder"),
+        Err(err) => error!("ERROR: {}", err),
+    }
 
     // Read each Contetn file
     // Render the fansy text converter
