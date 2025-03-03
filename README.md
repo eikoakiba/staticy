@@ -56,4 +56,3 @@ Make a pull request.
 1. Add layout feature
 2. Better logging system
 3. Hot reloading pages
-4. html base documenation
