@@ -224,7 +224,8 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
             let res_chr: Vec<&str> = html_content.split('\n').collect();
             let title = res_chr[0];
             let info = res_chr[1];
-            let date: String = Utc::now().to_string();
+            //let date: String = Utc::now().to_string();
+            let date: &str = res_chr[2];
 
             let content: Result<Content, String> =
                 save_contents(&html_content, &file_name_main, &title, &info, &date);
