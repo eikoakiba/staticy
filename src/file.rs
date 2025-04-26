@@ -45,10 +45,7 @@ pub fn save_contents(
         .replace("<ContentTitle/>", &title)
         .replace("<ContentDate/>", &date)
         .replace("<ContentInfo/>", &info)
-        .replace(
-            "<Content/>",
-            &base_content_lines[2..base_content_lines.len()].join(""),
-        ); // Put Actual Value
+        .replace("<Content/>", &base_content_lines.join("")); // Put Actual Value
     if let Err(err) = dist_check(true) {
         return Err(err);
     }

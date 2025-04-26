@@ -1,4 +1,5 @@
 Copy external files, like css files to the dist folder
+Make date automatic
 Make layout system
   - Layout system is the key part of the new migration
     to static _website_ generator

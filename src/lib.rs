@@ -217,15 +217,24 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
         //        println!("WARNING: This file didn't provide any magic symbols")
         //    }
         //};
-        let res = markdown::to_html_with_options(&file_content, &Options::gfm());
+
+        let res_chr: Vec<&str> = file_content.split('\n').collect();
+        let title = res_chr[0];
+        let info = res_chr[1];
+        let date: &str = res_chr[2];
+
+        let markdown_data = res_chr[3..res_chr.len()].join("\n");
+        //println!("{}", markdown_data);
+
+        let res = markdown::to_html_with_options(&markdown_data, &Options::gfm());
         if let Err(msg) = res {
             return Err(msg.to_string());
         } else if let Ok(html_content) = res {
-            let res_chr: Vec<&str> = html_content.split('\n').collect();
-            let title = res_chr[0];
-            let info = res_chr[1];
-            //let date: String = Utc::now().to_string();
-            let date: &str = res_chr[2];
+            //let res_chr: Vec<&str> = html_content.split('\n').collect();
+            //let title = res_chr[0];
+            //let info = res_chr[1];
+            ////let date: String = Utc::now().to_string();
+            //let date: &str = res_chr[2];
 
             let content: Result<Content, String> =
                 save_contents(&html_content, &file_name_main, &title, &info, &date);
