@@ -1,4 +1,4 @@
-<h1 align="center"><i>staticy</i>, a static site generator </br>
+<h1 align="center"><i>staticy</i>, a static blog generator </br>
 </h1>
 
 <p align="center">
@@ -6,13 +6,16 @@
 </p>
 
 Hello and greetings to this project, This is a fun and also important project
-For myself and also for others too. Right now it works as a weblog generator
-But there will be future updates that you can make whole static website with
-This tool. the main goal of this project is to make a static website without writing 
-Verything manualy, For those who have static websites like myself, this tool
-is able to automate the whole process. Blow is a list of all things that you
-may want to know.
+For myself and others. the main goal of this project is to make a static blog
+without writing Verything it manualy, For those who have static websites/blogs
+like myself, this tool is able to automate the whole process. Blow is a list of 
+all things that you may want to know.
 
+Notice: This project works best if you write your own shell scripts to intract with
+The idea is so simple, we have a base system and we can write other small blocks of
+code that may be different for others with things like shell scripting languages.
+I'm using bash, but you can use whatever you want. In next updates I will add my own
+scripts like cehck if the blog generated before or other things.
 
 ## Table Of Contents
 1. [Introduction](#introduction)
