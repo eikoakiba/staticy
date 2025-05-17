@@ -5,7 +5,8 @@ fn main() {
     // Set the Base files as base blog file
     let result = staticy::generate_html();
     if let Err(ref err) = result {
-        error!("ERROR: {}", err);
+        println!("ERROR: {}", err);
+        return;
     }
 
     let mut result = result.unwrap();
@@ -13,7 +14,7 @@ fn main() {
     let base = staticy::generate_blog(&result);
     match base {
         Ok(()) => println!("Awesome! All files generated inside dist/ folder"),
-        Err(err) => error!("ERROR: {}", err),
+        Err(err) => println!("ERROR: {}", err),
     }
 
     // Read each Contetn file

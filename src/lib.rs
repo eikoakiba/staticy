@@ -198,7 +198,7 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
             continue;
         }
 
-        if !is_file.is_file() && !file_name.contains(".md") {
+        if !is_file.is_file() || !file_name.ends_with(".md") {
             println!(
                 "INFO: This file {} can't process because it's not .md file",
                 file_name_main
@@ -224,12 +224,20 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
         //};
 
         let res_chr: Vec<&str> = file_content.split('\n').collect();
+
+        if res_chr.len() <= 3 {
+            return Err(format!(
+                "There is not enough content in {} file!",
+                file_name
+            ));
+        }
+
         let title = res_chr[0];
         let info = res_chr[1];
         let date: &str = res_chr[2];
 
         let parsed_date = date.replace("/", "-");
-        println!("{}", parsed_date);
+        // println!("{}", parsed_date);
         let date = NaiveDate::parse_from_str(&parsed_date, "%Y-%m-%d");
         if let Err(err) = date {
             return Err(format!(
