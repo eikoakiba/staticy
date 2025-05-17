@@ -1,13 +1,16 @@
+use chrono::{DateTime, Local, NaiveDate};
+
 #[derive(Default, Debug)]
 pub struct Content {
     pub name: String,
     pub title: String,
     pub info: String,
-    pub date: String,
+    pub date: NaiveDate,
 }
 
 impl Content {
-    pub fn new(name: String, title: String, info: String, date: String) -> Self {
+    // @STATIC
+    pub fn new(name: String, title: String, info: String, date: NaiveDate) -> Self {
         Content {
             name,
             title,

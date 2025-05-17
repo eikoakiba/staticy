@@ -1,4 +1,4 @@
-use chrono::{prelude::Utc, Weekday};
+use chrono::{prelude::Utc, NaiveDate, Weekday};
 use content::Content;
 use file::save_contents;
 use markdown::Options;
@@ -43,7 +43,7 @@ static COUNTRIES: phf::Map<&'static str, Handler> = phf_map! {
 //// TODO: Make a Lexer(Token) interface for this function
 //fn magic(input: String, file_name: &String) -> Option<content::Content> {
 //    let mut ret_str: String = input.clone();
-//    let mut state: usize = 0;
+//    le.t mut state: usize = 0;
 //    let mut event: String = String::default();
 //    let mut key: String = String::default();
 //    let mut chr: usize = 0;
@@ -113,6 +113,11 @@ static COUNTRIES: phf::Map<&'static str, Handler> = phf_map! {
 //    Some(ret_content)
 //}
 
+// function to sort items by their `date` field
+pub fn sort_by_time(content_list: &mut Vec<Content>) {
+    content_list.sort_by(|v, b| v.date.cmp(&b.date));
+}
+
 pub fn generate_blog(files: &Vec<content::Content>) -> Result<(), String> {
     let mut base_blog_cont: String = file::read_base("index.html");
 
@@ -145,7 +150,7 @@ pub fn generate_blog(files: &Vec<content::Content>) -> Result<(), String> {
         final_cont += &element_inner
             .replace("<BlogName/>", &x.title)
             .replace("<BlogLink/>", &x.get_link())
-            .replace("<BlogDate/>", &x.date)
+            .replace("<BlogDate/>", &x.date.format("%Y/%m/%d").to_string())
             .replace("<BlogInfo/>", &x.info);
     });
     //println!("{}", final_cont);
@@ -193,7 +198,7 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
             continue;
         }
 
-        if !is_file.is_file() || !file_name.contains(".md") {
+        if !is_file.is_file() && !file_name.contains(".md") {
             println!(
                 "INFO: This file {} can't process because it's not .md file",
                 file_name_main
@@ -223,6 +228,18 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
         let info = res_chr[1];
         let date: &str = res_chr[2];
 
+        let parsed_date = date.replace("/", "-");
+        println!("{}", parsed_date);
+        let date = NaiveDate::parse_from_str(&parsed_date, "%Y-%m-%d");
+        if let Err(err) = date {
+            return Err(format!(
+                "Can't Read the input time because: {}",
+                err.to_string()
+            ));
+        }
+
+        let date_content = date.unwrap();
+
         let markdown_data = res_chr[3..res_chr.len()].join("\n");
         //println!("{}", markdown_data);
 
@@ -237,7 +254,7 @@ pub fn generate_html() -> Result<Vec<content::Content>, String> {
             //let date: &str = res_chr[2];
 
             let content: Result<Content, String> =
-                save_contents(&html_content, &file_name_main, &title, &info, &date);
+                save_contents(&html_content, &file_name_main, &title, &info, date_content);
 
             match content {
                 Ok(content) => files.push(content),

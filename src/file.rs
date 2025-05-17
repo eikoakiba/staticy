@@ -1,4 +1,5 @@
-use chrono::Utc;
+use chrono::naive::NaiveDateDaysIterator;
+use chrono::{NaiveDate, ParseResult, Utc};
 use std::path::Path;
 use std::{fs, io::Write};
 
@@ -29,7 +30,7 @@ pub fn save_contents(
     file_name: &str,
     title: &str,
     info: &str,
-    date: &str,
+    date: NaiveDate, // date: &str, CAUSE automatied time flow
 ) -> Result<content::Content, String> {
     // Save the HTML contents files
     let mut base_content: String = file::read_base("blog.html"); // read the base file
@@ -38,12 +39,15 @@ pub fn save_contents(
         file_name.to_string(), // instead of to_string
         title.to_string(),
         info.to_string(),
-        date.to_string(),
+        date,
     );
 
     base_content = base_content
         .replace("<ContentTitle/>", &title)
-        .replace("<ContentDate/>", &date)
+        .replace(
+            "<ContentDate/>",
+            date.format("%Y/%m/%d").to_string().as_str(),
+        )
         .replace("<ContentInfo/>", &info)
         .replace("<Content/>", &base_content_lines.join("")); // Put Actual Value
     if let Err(err) = dist_check(true) {
